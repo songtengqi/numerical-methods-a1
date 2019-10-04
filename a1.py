@@ -62,6 +62,18 @@ def fit_poly_2(points):
     '''
 
     ## YOUR CODE GOES HERE
+    a, b, c = points
+    x1, y1 = a
+    x2, y2 = b
+    x3, y3 = c
+    assert (y2 - y1) / (x2 - x1) != (y3 - y2) / (x3 - x2)
+    assert (x1 != x2)
+    assert (x2 != x3)
+    assert (x1 != x3)
+    m = array([[1, x1, x1 ** 2], [1, x2, x2 ** 2], [1, x3, x3 ** 2]])
+    b = array([y1, y2, y3])
+    gauss_elimination(m, b)
+    return gauss_substitution(m, b)
     raise Exception("Function not implemented")
 
 
@@ -85,6 +97,17 @@ def fit_poly(points):
     '''
 
     ## YOUR CODE GOES HERE
+    l = len(points)
+    a = zeros((l, l))
+    y = zeros(l)
+    for i in range(l):
+        for j in range(l):
+            a[i][j] = points[i][0] ** j
+    # print (a)
+    for t in range(l):
+        y[t] = points[t][1]
+    gauss_elimination(a, y)
+    return gauss_substitution(a, y)
     raise Exception("Function not implemented")
 
 
@@ -109,6 +132,21 @@ def tridiag_solver_n(n):
     '''
 
     ## YOUR CODE GOES HERE
+    m = zeros((n,n))
+    b = zeros(n)
+    m[0][0] = 4
+    m[0][1] = -1
+    m[n-1][n-2] = -1
+    m[n-1][n-1] = 4
+    b[0]= 9
+    for i in range (1,n-1):
+        m[i][i-1] = -1
+        m[i][i] = 4
+        m[i][i+1] = -1
+    for j in range (1,n):
+        b[j] = 5
+    gauss_elimination(m, b)
+    return gauss_substitution(m, b)
     raise Exception("Function not implemented")
 
 
@@ -133,6 +171,18 @@ def gauss_multiple(a, b):
     '''
 
     ## YOUR CODE GOES HERE
+    assert(determinant(a)!=0)
+    n = len(b)
+    for j in range(0,n-1):
+        for i in range(k+1,n):
+            if a[i,j] != 0.0:
+                lam = a[i,j]/a[j,j]
+                a[i,j+1:n] = a[i,j+1:n] - lam*a[j,j+1:n]
+                b[i] = b[i] - lam*b[j]
+    for i in range(n-1,-1,-1):
+        b[i] = (b[i] - dot(a[i,i+1:n],b[i+1:n]))/a[i,i]
+    
+    return b
     raise Exception("Function not implemented")
 
 
@@ -147,6 +197,9 @@ def gauss_multiple_pivot(a, b):
     '''
 
     ## YOUR CODE GOES HERE
+    gauss_elimination_multiple(a,b)
+    res = gauss_multiple(a, b)
+    return res
     raise Exception("Function not implemented")
 
 
@@ -161,5 +214,93 @@ def matrix_invert(a):
     '''
 
     ## YOUR CODE GOES HERE
+    n = len(a)
+    i = zeros((n,n))
+    for j in range (n):
+        i[j][j] = 1
+    gauss_elimination_multiple(a,i)
+    res = gauss_multiple(a, i)
+    return res
     raise Exception("Function not implemented")
-      //test here
+   
+   from numpy import shape
+def gauss_elimination(a, b, verbose=False):
+    n, m = shape(a)
+    n2,  = shape(b)
+    assert(n==n2)
+    for k in range(n-1):
+        for i in range(k+1, n):
+            assert(a[k,k] != 0) # woops, what happens in this case? we'll talk about it later!
+            if (a[i,k] != 0): # no need to do anything when lambda is 0
+                lmbda = a[i,k]/a[k,k] # lambda is a reserved keyword in Python
+                a[i, k:n] = a[i, k:n] - lmbda*a[k, k:n] # list slice operations
+                b[i] = b[i] - lmbda*b[k] # don't forget this step! 
+            if verbose:
+                print(a, b)
+
+from numpy import dot, zeros, shape
+def gauss_substitution(a, b):
+    n, m = shape(a)
+    n2, = shape(b)
+    assert(n==n2)
+    x = zeros(n)
+    for i in range(n-1, -1, -1): # decreasing index
+        x[i] = (b[i] - dot(a[i,i+1:], x[i+1:]))/a[i,i]
+    return x
+
+
+def swap(a, i, j):
+    if len(shape(a)) == 1:
+        a[i],a[j] = a[j],a[i] # unpacking
+    else:
+        a[[i, j], :] = a[[j, i], :]
+
+def gauss_elimination_multiple(a, b):
+    assert (determinant(a)!= 0)
+    n, m = shape(a)
+    n2, n3 = shape(b)
+    assert(n==n2)
+    # New in pivot version
+    s = zeros(n)
+    for i in range(n):
+        s[i] = max(abs(a[i, :]))
+    for k in range(n-1):
+        # New in pivot version
+        p = argmax(abs(a[k:,k])/s[k:]) + k
+        swap(a, p, k)
+        swap(b, p, k)
+        swap(s, p, k)
+        # The remainder remains as in the previous version
+        for i in range(k+1, n):
+            assert(a[k,k] != 0) # this shouldn't happen now, unless the matrix is singular
+            if (a[i,k] != 0): # no need to do anything when lambda is 0
+                lmbda = a[i,k]/a[k,k] # lambda is a reserved keyword in Python
+                a[i, k:n] = a[i, k:n] - lmbda*a[k, k:n] # list slice operations
+                b[i] = b[i] - lmbda*b[k]
+
+def determinant(a):
+    # Check that a is square and of size at least 2
+    n, m = shape(a)
+    assert(n>=2)
+    assert(n==m)
+    # Case n = 2
+    if n == 2:
+        return a[0,0]*a[1,1]-a[0,1]*a[1,0]
+    # Case n > 2
+    det = 0
+    for k in range(n): # from 0 to n-1
+        # Build Mik
+        m = zeros((n-1,n-1))
+        i = 0 # could be any int between 0 and n-1
+        for l in range(0, n):
+            if l == i: # skip row i
+                continue
+            for j in range(n-1):
+                if j < k:
+                    m[l-1,j] = a[l,j]
+                else:
+                    m[l-1,j] = a[l,j+1] # skip column k
+        det += (-1)**(k)*a[i,k]*determinant(m) # recursive call to the function
+    return det
+
+      
