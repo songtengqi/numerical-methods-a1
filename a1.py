@@ -34,6 +34,8 @@ def square(a):
     '''
 
     ## YOUR CODE GOES HERE
+    n,m = shape(a)
+    return n==m
     raise Exception("Function not implemented")
 
 
