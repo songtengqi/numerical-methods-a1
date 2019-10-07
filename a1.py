@@ -223,7 +223,7 @@ def matrix_invert(a):
     return res
     raise Exception("Function not implemented")
    
-   from numpy import shape
+   
 def gauss_elimination(a, b, verbose=False):
     n, m = shape(a)
     n2,  = shape(b)
@@ -238,7 +238,7 @@ def gauss_elimination(a, b, verbose=False):
             if verbose:
                 print(a, b)
 
-from numpy import dot, zeros, shape
+
 def gauss_substitution(a, b):
     n, m = shape(a)
     n2, = shape(b)
