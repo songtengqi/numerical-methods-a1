@@ -174,7 +174,7 @@ def gauss_multiple(a, b):
     assert(determinant(a)!=0)
     n = len(b)
     for j in range(0,n-1):
-        for i in range(i+1,n):
+        for i in range(j+1,n):
             if a[i,j] != 0.0:
                 lam = a[i,j]/a[j,j]
                 a[i,j+1:n] = a[i,j+1:n] - lam*a[j,j+1:n]
